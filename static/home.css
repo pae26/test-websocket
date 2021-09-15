@@ -1,0 +1,23 @@
+.parent {
+    width: 1000px;
+    height: 500px;
+    background-color: yellow;
+}
+.child {
+    padding: 10px 20px;
+    background-color: rgb(255, 197, 197);
+}
+
+[data-shape=square] {
+    padding: 5px 10px;
+    width: 180px;
+    height: 50px;
+    box-shadow: 3px 3px 5px #9d9592;
+    border-radius: 5px;
+}
+[data-color=blue] {
+    background-color: #aff;
+}
+.sticky-text {
+    overflow-wrap: break-word;
+}
