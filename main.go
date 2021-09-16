@@ -2,12 +2,12 @@ package main
 
 import (
 	"database/sql"
+	"encoding/json"
 	"fmt"
 	"html/template"
 	"log"
 	"net/http"
 	"os"
-	"strconv"
 
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/joho/godotenv"
@@ -44,7 +44,7 @@ func init() {
 }
 
 func templateHandler(w http.ResponseWriter, r *http.Request) {
-	rows, e := Db.Query("select * from sticky")
+	/*rows, e := Db.Query("select * from sticky")
 	if e != nil {
 		log.Println(e.Error())
 	}
@@ -67,7 +67,7 @@ func templateHandler(w http.ResponseWriter, r *http.Request) {
 		"text":       result[0].Text,
 		"Location_x": strconv.Itoa(result[0].Locate_x),
 		"Location_y": strconv.Itoa(result[0].Locate_y),
-	}
+	}*/
 
 	t, err := template.ParseFiles(
 		"static/home.html",
@@ -75,18 +75,78 @@ func templateHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Fatalln("テンプレートファイルを読み込めません:", err.Error())
 	}
-	if err := t.Execute(w, data); err != nil {
+	if err := t.Execute(w, nil); err != nil {
 		log.Fatalln("エラー!:", err.Error())
 	}
 }
 
+func getStickiesInfo(w http.ResponseWriter, r *http.Request) {
+	rows, e := Db.Query("select * from sticky")
+	if e != nil {
+		log.Println(e.Error())
+	}
+
+	var stickies []Sticky
+
+	for rows.Next() {
+		sticky := Sticky{}
+		if er := rows.Scan(
+			&sticky.Id,
+			&sticky.Locate_x,
+			&sticky.Locate_y,
+			&sticky.Text,
+		); er != nil {
+			log.Println(er)
+		}
+		stickies = append(stickies, sticky)
+	}
+
+	defer rows.Close()
+
+	result, err := json.Marshal(stickies)
+	if err != nil {
+		panic(err)
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(result)
+}
+
+func updateSticky(w http.ResponseWriter, r *http.Request) {
+	var sticky Sticky
+	len := r.ContentLength
+	body := make([]byte, len)
+	r.Body.Read(body)
+	if err := json.Unmarshal(body[:len], &sticky); err != nil {
+		log.Fatalln("エラー")
+	}
+
+	sql, err := Db.Prepare("update sticky set locate_x=?, locate_y=? where id=?")
+	if err != nil {
+		log.Fatalln(err)
+	}
+	sql.Exec(sticky.Locate_x, sticky.Locate_y, sticky.Id)
+
+	res, err := json.Marshal("{200, \"ok\"}")
+	if err != nil {
+		log.Fatalln(err)
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(res)
+}
+
 func main() {
 	log.Println("Web server started")
+	r := newRoom()
+	http.Handle("/room", r)
+	go r.run()
+	http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("static"))))
+	http.HandleFunc("/", templateHandler)
+	http.HandleFunc("/stickies", getStickiesInfo)
+	http.HandleFunc(("/update-sticky"), updateSticky)
 
 	server := http.Server{
 		Addr: ":9001",
 	}
-	http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("static"))))
-	http.HandleFunc("/", templateHandler)
 	server.ListenAndServe()
 }
