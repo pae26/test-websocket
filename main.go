@@ -39,36 +39,10 @@ func init() {
 	if err != nil {
 		panic(err)
 	}
-	log.Println(DB_STR)
 	log.Println("db connected")
 }
 
 func templateHandler(w http.ResponseWriter, r *http.Request) {
-	/*rows, e := Db.Query("select * from sticky")
-	if e != nil {
-		log.Println(e.Error())
-	}
-
-	var result []Sticky
-
-	for rows.Next() {
-		s := Sticky{}
-		if er := rows.Scan(&s.Id, &s.Locate_x, &s.Locate_y, &s.Text); er != nil {
-			log.Println(er)
-		}
-		result = append(result, s)
-	}
-
-	log.Println("Locate_x:", result[0].Locate_x)
-
-	defer rows.Close()
-
-	data := map[string]string{
-		"text":       result[0].Text,
-		"Location_x": strconv.Itoa(result[0].Locate_x),
-		"Location_y": strconv.Itoa(result[0].Locate_y),
-	}*/
-
 	t, err := template.ParseFiles(
 		"static/home.html",
 	)
@@ -118,7 +92,7 @@ func updateSticky(w http.ResponseWriter, r *http.Request) {
 	body := make([]byte, len)
 	r.Body.Read(body)
 	if err := json.Unmarshal(body[:len], &sticky); err != nil {
-		log.Fatalln("エラー")
+		log.Fatalln("エラー!:", err)
 	}
 
 	sql, err := Db.Prepare("update sticky set locate_x=?, locate_y=? where id=?")

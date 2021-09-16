@@ -1,4 +1,5 @@
 $(function() {
+    var socket = null;
     function newSticky(id, text) {
         return '<span class="init-sticky sticky" data-sticky-id="' + id + '" data-color="blue" data-shape="square">' + '<span class="sticky-text">' + text +'</span></span>';
     }
@@ -27,12 +28,10 @@ $(function() {
             url: '/stickies',
         }).done(function(stickies) {
             console.log('通信成功');
-            console.log(stickies);
             let id = stickies[0]['Id'];
             let text = stickies[0]['Text'];
             let x = stickies[0]['Locate_x'];
             let y = stickies[0]['Locate_y'];
-            console.log(y);
             let sticky = newSticky(id, text);
             $('.parent').append(sticky);
             $('.sticky').draggable({
@@ -55,7 +54,7 @@ $(function() {
             type: 'POST',
             url: '/update-sticky',
             data : JSON.stringify({
-                "Id": id,
+                "Id": parseInt(id),
                 "Locate_x": parseInt(location_x),
                 "Locate_y": parseInt(location_y)
             })
@@ -69,14 +68,40 @@ $(function() {
     $(document).on('mouseup', '.sticky', function() {
         let id = $(this).data('sticky-id');
         let style_str = $(this).attr('style');
-        console.log("style_str:", style_str);
         let style_list = style_str.match(/[0-9]+/g);
-        console.log("style_list:", style_list);
         let location_x = style_list[0];
         let location_y = style_list[1];
         updateSticy(id, location_x, location_y);
+
+        if(!socket) {
+            alert("エラー: WebSocket通信が行われていません。");
+            return false;
+        }
+        socket.send(id + "," + location_x + "," + location_y);
+        return false;
     });
 
     //initSticky();
     loadSticky();
+
+    if(!window["WebSocket"]) {
+        alert("エラー: WebSocketに対応していないブラウザです。");
+    } else {
+        socket = new WebSocket("ws://localhost:9001/room")
+        socket.onclose = function() {
+            alert("接続が終了しました。");
+        }
+        socket.onmessage = function(e) {
+            console.log(e.data);
+            let socket_slice = e.data.split(',');
+            let socket_id = socket_slice[0];
+            let socket_x = socket_slice[1];
+            let socket_y = socket_slice[2];
+            //updateSticy(socket_id, socket_x, socket_y);
+            $('[data-sticky-id="'+ socket_id +'"]').animate({
+                'left': socket_x + 'px',
+                'top': socket_y + 'px'
+            })
+        }
+    }
 });
