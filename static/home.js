@@ -104,4 +104,43 @@ $(function() {
             })
         }
     }
+
+    let data_label = [];
+    for(let i=0;i<47;i++) {
+        data_label.push(i.toString());
+    }
+
+    let ctx = document.getElementById("chart").getContext('2d');
+    let myChart = new Chart(ctx, {
+        type: "bar",
+        data: {
+            labels: data_label,
+            datasets: [
+                {
+                    label: "ページ",
+                    data: [10, 22, 10, 9, 12, 6],
+                    backgroundColor: "blue",
+                },
+            ]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                xAxes: [{
+                }],
+                yAxes: [{
+                    ticks: {
+                        min: 0,
+                        max: 10,
+                        stepSize: 10,
+                    },
+                }],
+
+            },
+            hover: {
+                //ホバー時の動作（single, label, dataset）
+                mode: 'single'
+            },
+        }
+    });
 });
