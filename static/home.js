@@ -138,7 +138,6 @@ $(function() {
 
             },
             hover: {
-                //ホバー時の動作（single, label, dataset）
                 mode: 'single'
             },
         }

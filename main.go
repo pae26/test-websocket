@@ -54,6 +54,29 @@ func templateHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func setCookies(w http.ResponseWriter, r *http.Request) {
+	cookie := &http.Cookie{
+		Name:  "hoge",
+		Value: "bar",
+	}
+	http.SetCookie(w, cookie)
+
+	fmt.Fprintf(w, "Cookieの設定ができたよ")
+}
+
+func showCookie(w http.ResponseWriter, r *http.Request) {
+	cookie, err := r.Cookie("hoge")
+
+	if err != nil {
+		log.Fatal("Cookie: ", err)
+	}
+
+	log.Println(cookie)
+	// tmpl := template.Must(template.ParseFiles("./cookie.html"))
+	// tmpl.Execute(w, cookie)
+
+}
+
 func getStickiesInfo(w http.ResponseWriter, r *http.Request) {
 	rows, e := Db.Query("select * from sticky")
 	if e != nil {
@@ -118,6 +141,8 @@ func main() {
 	http.HandleFunc("/", templateHandler)
 	http.HandleFunc("/stickies", getStickiesInfo)
 	http.HandleFunc(("/update-sticky"), updateSticky)
+	http.HandleFunc("/set_cookie", setCookies)
+	http.HandleFunc("/show_cookie", showCookie)
 
 	server := http.Server{
 		Addr: ":9001",
