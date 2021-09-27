@@ -87,7 +87,10 @@ $(function() {
     if(!window["WebSocket"]) {
         alert("エラー: WebSocketに対応していないブラウザです。");
     } else {
-        socket = new WebSocket("ws://localhost:9001/room")
+        socket = new WebSocket("ws://localhost:9001/room");
+        socket.onopen = function(event) {
+            console.log("接続しました:" + event);
+	    }
         socket.onclose = function() {
             alert("接続が終了しました。");
         }
@@ -142,4 +145,13 @@ $(function() {
             },
         }
     });
+
+    $('.child').on('click', function() {
+        let aaa = $(this).parents().find('body');
+        console.log('aaa:'+ JSON.stringify(aaa, null, 2));
+    });
+
+    let a = true;
+    b = 'bbb' + a;
+    console.log('b:' + b);
 });

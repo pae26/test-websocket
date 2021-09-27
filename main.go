@@ -8,6 +8,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"reflect"
 
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/joho/godotenv"
@@ -56,8 +57,14 @@ func templateHandler(w http.ResponseWriter, r *http.Request) {
 
 func setCookies(w http.ResponseWriter, r *http.Request) {
 	cookie := &http.Cookie{
-		Name:  "hoge",
-		Value: "bar",
+		Name:  "hoge1",
+		Value: "bar1",
+	}
+	http.SetCookie(w, cookie)
+
+	cookie = &http.Cookie{
+		Name:  "hoge2",
+		Value: "bar2",
 	}
 	http.SetCookie(w, cookie)
 
@@ -65,13 +72,18 @@ func setCookies(w http.ResponseWriter, r *http.Request) {
 }
 
 func showCookie(w http.ResponseWriter, r *http.Request) {
-	cookie, err := r.Cookie("hoge")
-
-	if err != nil {
-		log.Fatal("Cookie: ", err)
+	cookies := r.Cookies()
+	for i, c := range cookies {
+		log.Println(i)
+		log.Println(len(cookies))
+		log.Println(reflect.TypeOf(c))
 	}
 
-	log.Println(cookie)
+	// if err != nil {
+	// 	log.Fatal("Cookie: ", err)
+	// }
+
+	log.Println(cookies[1])
 	// tmpl := template.Must(template.ParseFiles("./cookie.html"))
 	// tmpl.Execute(w, cookie)
 
